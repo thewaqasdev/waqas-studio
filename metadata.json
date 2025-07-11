@@ -1,0 +1,6 @@
+{
+  "name": "Audio Clipper",
+  "description": "An application to upload an audio file and split it into 46-second clips, which can be previewed and downloaded individually.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
