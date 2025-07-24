@@ -15,7 +15,8 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: '0.0.0.0',
-      port: 5173
+      port: 5000, // Recommended port for accessibility
+      allowedHosts: ['2c5686b9-6b2e-4982-b83e-bedcc014ee69-00-352mu9wv0kg23.sisko.replit.dev'] // Your allowed host
     }
   };
 });

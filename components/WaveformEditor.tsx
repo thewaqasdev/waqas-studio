@@ -52,71 +52,25 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({ buffer, original
         setActiveRegion(region);
     });
 
-    regions.on('region-updated', (region) => {
-        setActiveRegion(region);
-    });
-    
-    regions.on('region-out', (region) => {
-        ws.pause();
-    });
-
-    ws.on('ready', () => {
-        regions.enableDragSelection({
-            color: 'rgba(239, 68, 68, 0.25)',
-        });
-    });
-    
-    ws.on('interaction', () => {
-        regions.clearRegions();
-        setActiveRegion(null);
-    });
-
     wavesurferRef.current = ws;
 
     return () => {
-      ws.destroy();
+        ws.destroy();
     };
   }, [buffer]);
 
-  const handleCreateClip = useCallback(() => {
-    if (!activeRegion || !wavesurferRef.current) return;
-    
-    const audioContext = getAudioContext();
-    const originalBuffer = wavesurferRef.current.getDecodedData();
-    if (!originalBuffer) return;
-
-    const start = activeRegion.start;
-    const end = activeRegion.end;
-    
-    const startIndex = Math.floor(start * originalBuffer.sampleRate);
-    const endIndex = Math.floor(end * originalBuffer.sampleRate);
-    const frameCount = endIndex - startIndex;
-    
-    if (frameCount <= 0) return;
-
-    const newClipBuffer = audioContext.createBuffer(
-        originalBuffer.numberOfChannels,
-        frameCount,
-        originalBuffer.sampleRate
-    );
-
-    for (let i = 0; i < originalBuffer.numberOfChannels; i++) {
-        newClipBuffer.getChannelData(i).set(originalBuffer.getChannelData(i).subarray(startIndex, endIndex));
-    }
-
-    const wavBlob = bufferToWave(newClipBuffer, frameCount);
-    const url = URL.createObjectURL(wavBlob);
-    
-    setClips(prevClips => [...prevClips, { url, buffer: newClipBuffer }]);
-    
-    activeRegion.remove();
-    setActiveRegion(null);
-
-  }, [activeRegion, getAudioContext]);
-  
   const handlePlaySelection = () => {
-    if(activeRegion) {
-        activeRegion.play();
+    if (activeRegion) {
+      activeRegion.play();
+    }
+  };
+
+  const handleCreateClip = () => {
+    if (activeRegion) {
+      const clip: Clip = { start: activeRegion.start, end: activeRegion.end };
+      setClips((prevClips) => [...prevClips, clip]);
+      activeRegion.remove();
+      setActiveRegion(null);
     }
   };
 
@@ -126,7 +80,7 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({ buffer, original
         <div ref={waveformRef} id="waveform" className="w-full cursor-pointer" />
         <p className="text-center text-sm text-gray-400 mt-2">Click and drag on the waveform to select a region to clip.</p>
       </div>
-      
+
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
         <button 
             onClick={handlePlaySelection}
@@ -144,16 +98,12 @@ export const WaveformEditor: React.FC<WaveformEditorProps> = ({ buffer, original
           onClick={onReset}
           className="w-full sm:w-auto flex items-center justify-center px-6 py-3 bg-gray-600/50 text-white rounded-md hover:bg-gray-700"
         >
-          <ResetIcon/>
+          <ResetIcon />
           Start Over
         </button>
       </div>
 
-      {clips.length > 0 && (
-          <div className="mt-10 pt-6 border-t border-gray-700">
-            <ClipList clips={clips} originalFileName={originalFileName} onReset={onReset} getAudioContext={getAudioContext} />
-          </div>
-      )}
+      <ClipList clips={clips} originalFileName={originalFileName} onReset={onReset} getAudioContext={getAudioContext} />
     </div>
   );
 };
